@@ -3,18 +3,24 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from scrape_txt import get_html
 
-def extract_html_links(html):
+def extract_html_links(base_url, html):
     print("Looking for .html / .htm links...")
     soup = BeautifulSoup(html, "html.parser")
+    seen = set()
     links = []
     for a in soup.find_all("a", href=True):
         href = (a.get("href") or a.get("HREF") or "").strip()
         lower_href = href.lower()
-        if lower_href.endswith(".html") or lower_href.endswith(".htm"):
-            print(f"Found link: {href}")
-            links.append(href)
-        else:
+        if not (lower_href.endswith(".html") or lower_href.endswith(".htm")):
             print(f"Skipping non-html: {href}")
+            continue
+        full_url = urljoin(base_url, href)
+        if full_url in seen:
+            print(f"Skipping duplicate: {href}")
+            continue
+        seen.add(full_url)
+        print(f"Found link: {href}")
+        links.append(href)
     print(f"Total .html/.htm links found: {len(links)}")
     return links
 
